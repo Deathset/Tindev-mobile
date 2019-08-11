@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { SafeAreaView, View, Image, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import AsyncStorage from '@react-native-community/async-storage'
-
-
+import io from 'socket.io-client'
+import itsamatch from '../assets/match/itsamatch.png'
 import like from '../assets/like.png'
 import dislike from '../assets/dislike.png'
 
@@ -13,6 +13,15 @@ export default function Main({ navigation }) {
     const id = navigation.getParam('user')
 
     const [users, setUsers] = useState([])
+    const [matchDev, setMatchDev] = useState(null)
+    useEffect(() => {
+        const socket = io('http://192.168.1.107:3333',{
+            query:{ user: id}
+        })
+        socket.on('match', dev => {
+            setMatchDev(dev)
+        })
+    }, [id])
 
     useEffect(() => {
         async function loadUsers() {
@@ -83,6 +92,21 @@ export default function Main({ navigation }) {
                 
 
             }
+
+            {
+                matchDev &&(
+                    <View style={Estilo.matchContainer} >
+                        <Image style={Estilo.matchImage} source={itsamatch} />
+                        <Image style={Estilo.matchAvata} source={{uri: matchDev.avatar}} />
+                        <Text style={Estilo.matchName} >{matchDev.name}</Text>
+                        <Text style={Estilo.matchBio} >{matchDev.bio}</Text>
+                        <TouchableOpacity onPress={() => setMatchDev(null)}>
+                            <Text style={Estilo.closeMatch} >Fechar!</Text>
+                        </TouchableOpacity>
+
+                    </View>
+                )
+            }
             
         </SafeAreaView>
     )
@@ -150,5 +174,42 @@ const Estilo = StyleSheet.create({
         alignItems: 'center',
         marginHorizontal: 20,
         elevation: 2
+    },
+    matchContainer:{
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor:'rgba(0,0,0,0.8)',
+        alignItems:'center',
+        justifyContent:'center'
+    },
+    matchImage:{
+        height:60,
+        resizeMode:'contain'
+    },
+    matchAvata:{
+        width:160,
+        height:160,
+        borderRadius:80,
+        borderColor:'#fff',
+        marginVertical:30,
+    },
+    matchName:{
+        fontSize:26,
+        fontWeight:'bold',
+        color:'#fff'
+    },
+    matchBio:{
+        marginTop:10,
+        fontSize:16,
+        color:'rgba(255,255,255,0.8)',
+        lineHeight:24,
+        textAlign:'center',
+        paddingHorizontal:30
+    },
+    closeMatch:{
+        fontSize:16,
+        color:'rgba(255,255,255,0.8)',
+        textAlign:'center',
+        marginTop:30,
+        fontWeight:'bold'
     }
 })
